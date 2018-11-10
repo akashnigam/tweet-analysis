@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as mlpp
 import twitterDataFetcher
+import tweetsSentimentAnalyzer
 
 
 class TweetsDataHandlerVisualizer:
 
     def __init__(self, user, num_tweets):
         self.fetcher = twitterDataFetcher.TwitterDataFetcher()
+        self.sentimentAnalyzer = tweetsSentimentAnalyzer.TweetsSentimentAnalyzer()
         self.data_frame = self.get_user_tweets_dataframe(user, num_tweets)
 
     def get_user_tweets_dataframe(self, user, num_tweets):
@@ -20,6 +22,7 @@ class TweetsDataHandlerVisualizer:
         data_frame["source"] = np.array([tweet.source for tweet in tweets])
         data_frame["like"] = np.array([tweet.favorite_count for tweet in tweets])
         data_frame["retweets"] = np.array([tweet.retweet_count for tweet in tweets])
+        data_frame["sentiment"] = np.array([self.sentimentAnalyzer.clean_and_find_sentiment(tweet.text) for tweet in tweets])
         return data_frame
 
     @staticmethod
@@ -43,7 +46,7 @@ class TweetsDataHandlerVisualizer:
         time_retweets.plot(figsize=(16, 4), color="b")
         mlpp.show()
 
-    def map_user_tweets_length_likes_retweets__by_date(self):
+    def map_user_tweets_attributes_by_date(self):
         norm_lengths = self.normalize_data_frame_column(self.data_frame["len"].values)
         time_length = pd.Series(norm_lengths, self.data_frame["date"].values)
         time_length.plot(figsize=(16, 4), label="length", legend="true")
@@ -53,14 +56,17 @@ class TweetsDataHandlerVisualizer:
         norm_retweets = self.normalize_data_frame_column(self.data_frame["retweets"].values)
         time_retweets = pd.Series(norm_retweets, self.data_frame["date"].values)
         time_retweets.plot(figsize=(16, 4), label="retweets", legend="true")
+        norm_sentiments = self.normalize_data_frame_column(self.data_frame["sentiment"].values)
+        time_sentiments = pd.Series(norm_sentiments, self.data_frame["date"].values)
+        time_sentiments.plot(figsize=(16, 4), label="sentiment", legend="true")
         mlpp.show()
 
 
 if __name__ == "__main__":
     user = "msdhoni"
-    num_of_tweets = 100
+    num_of_tweets = 20
     visualizer = TweetsDataHandlerVisualizer(user, num_of_tweets)
     visualizer.map_user_tweets_length_by_date()
     visualizer.map_user_tweets_likes_by_date()
     visualizer.map_user_tweets_retweets_by_date()
-    visualizer.map_user_tweets_length_likes_retweets__by_date()
+    visualizer.map_user_tweets_attributes_by_date()
